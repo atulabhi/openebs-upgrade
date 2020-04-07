@@ -1,6 +1,6 @@
 def ORG = "mayadataio"
 def REPO = "openebs-upgrade"
-
+def TAG = ""
 pipeline {
     agent any
     stages {
@@ -33,7 +33,7 @@ pipeline {
                              TAG = sh (returnStdout: true,script: "./maya-io-release/utils/version_override ${REPO} ${env.BRANCH_NAME}").trim()
                              echo "$TAG"
                     } else {
-                        TAG = sh (returnStdout: true,script: "./maya-io-release/utils/tag_fetch.sh ${REPO} ${env.BRANCH_NAME}").trim()
+                        TAG = sh (returnStdout: true,script: "./maya-io-release/utils/tag_fetch.sh ${REPO} master").trim()
                         echo "$TAG"
                     }   
                  }
@@ -48,7 +48,6 @@ pipeline {
                                      sh "docker login -u${USERNAME} -p${PASSWORD} "
 			                         sh "docker tag ${ORG}/${REPO}:ci-${GIT_SHA} ${ORG}/${REPO}:${TAG} && docker push ${ORG}/${REPO}:${TAG}"
                          } else if (env.BRANCH_NAME == 'master')  {
-                             withCredentials([usernamePassword( credentialsId: 'dd46bd83-0e93-492b-bc43-fcb671b135c3', usernameVariable: 'user', passwordVariable: 'pass')]) {
                                sh """
                                    git tag -fa "${TAG}" -m "Release of ${TAG}"
                                   """
@@ -56,7 +55,7 @@ pipeline {
                                sh """
                                   git push https://${user}:${pass}@github.com/mayadata-io/${REPO}.git --tag
                                    """
-                             }
+                            
                             } else {
 			                   echo "WARNING: Not pushing Image"
                         }
